@@ -2,11 +2,24 @@
 
 #include "ray.h"
 
-float drand48()
+#define M 0x100000000LL
+#define C 0xB16
+#define A 0x5DEECE66DLL
+
+static unsigned long long seed = 1;
+
+double drand48()
 {
-	int i = rand() % 100;
-	return float(i) / 100.0;
+	seed = (A * seed + C) & 0xFFFFFFFFFFFFLL;
+	unsigned int x = seed >> 16;
+	return  ((double)x / (double)M);
 }
+
+//float drand48()
+//{
+//	int i = rand() % 100;
+//	return float(i) / 100.0;
+//}
 
 vec3 random_in_unit_sphere()
 {
@@ -30,13 +43,20 @@ bool refract(const vec3& in, const vec3& normal, float ni_over_nt, vec3& refract
 	float discriminant = 1.0 - ni_over_nt * ni_over_nt * (1 - cos * cos);	// cos'*cos' = 1-(n/n')*(n/n')*sin*sin
 	if (discriminant > 0)
 	{
-		refracted = (in - normal * cos) * ni_over_nt - normal * sqrt(discriminant);
+		refracted = (unit_in - normal * cos) * ni_over_nt - normal * sqrt(discriminant);
 		return true;
 	}
 	else
 	{
 		return false;
 	}
+}
+
+float schlick(float cosine, float ref_idx)
+{
+	float r0 = (1 - ref_idx) / (1 + ref_idx);
+	r0 = r0 * r0;
+	return r0 + (1 - r0)*pow((1 - cosine), 5);
 }
 
 class material;
